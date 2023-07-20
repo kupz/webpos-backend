@@ -45,4 +45,8 @@ class User extends Authenticatable
     public function logs(){
         return $this->hasMany(ActivityLog::class);
     }
+
+    public function products(){
+        return $this->hasMany(Product::class);
+    }
 }

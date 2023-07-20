@@ -19,6 +19,12 @@ Route::middleware(['auth:api'])->group(function () {
     Route::delete('logout', [App\Http\Controllers\api\AuthController::class, 'logout']);
 });
 
+Route::prefix('products')->middleware(['auth:api'])->group(function () {
+    Route::get('/', [App\Http\Controllers\api\ProductController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\api\ProductController::class, 'store']);
+    Route::patch('/{product}', [App\Http\Controllers\api\ProductController::class, 'update']);
+});
+
 Route::middleware(['guest:api'])->group(function () {
     Route::post('register', [App\Http\Controllers\api\AuthController::class, 'register']);
     Route::post('login', [App\Http\Controllers\api\AuthController::class, 'login']);
