@@ -73,7 +73,7 @@ class AuthController extends Controller
             return response()->json(['ok' => false, 'message' => 'Request didn\'t pass the validation.', 'errors' => $validator->errors()], 400);
         }
         else{
-            $query = ActivityLog::whereRaw("label = 'api-login-failed' AND ip = ? AND created_at > ?", [$request->ip(), now()->addSeconds(env("KUPZ_AUTH_LOCK_DURATION", 300) * -1)]);
+            $query = ActivityLog::whereRaw("label = 'api-login-failed' AND ip = ? AND created_at > ?", [$request->ip(), now()->subSeconds(env("KUPZ_AUTH_LOCK_DURATION", 300))]);
             if($query->count() < env("KUPZ_AUTH_LOCK_MAX_ATTEMPT", 5)){
                 $validated = $validator->validated();
                 $type = filter_var($validated['name'], FILTER_VALIDATE_EMAIL) ? 'email' : 'name';
