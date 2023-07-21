@@ -30,15 +30,22 @@ class ProductController extends Controller
             ],
             'name' => 'required|max:200|string',
             'description' => 'required|max:200|string',
-            'barcode' => 'required|max:200|string',
+            'barcode' => 'nullable|max:200|string|unique:products',
             'price' => 'required|max:200|string',
+            'image' => 'nullable|image|max:8192'
         ]);
         if($validator->fails()){
             return response()->json(['ok' => false, 'message' => "Request didn't pass the validation.", 'errors' => $validator->errors()], 400);
         }
         else{
-            $validated = $validator->validated();
+            $validated = $validator->safe()->except(['image']);
+            if($request->file('image')){
+                $validated['extension'] = $request->file('image')->getClientOriginalExtension();
+            }
             $product = $request->user()->products()->create($validated);
+            if($request->file('image')){
+                $request->file('image')->storeAs('public/uploads', $product->id . "." . $validated['extension']);
+            }
             $request->user()->logs()->create([
                 'table_name' => 'products',
                 'object_id' => $product->id,
@@ -63,17 +70,22 @@ class ProductController extends Controller
             'description' => 'required|max:200|string',
             'barcode' => 'required|max:200|string',
             'price' => 'required|max:200|string',
+            'image' => 'nullable|image|max:8192'
         ]);
         if($validator->fails()){
             return response()->json(['ok' => false, 'message' => "Request didn't pass the validation.", 'errors' => $validator->errors()], 400);
         }
         else{
-            $validated = $validator->validated();
+            $validated = $validator->safe()->except(['image']);
             $changes = [];
             foreach($validated as $key => $value){
                 if($value != $product[$key]){
                     $changes[$key] = ["old" => $product[$key], "new" => $value];
                 }
+            }
+            if($request->file('image')){
+                $validated['extension'] = $request->file('image')->getClientOriginalExtension();
+                $request->file('image')->storeAs('public/uploads', $product->id . "." . $validated['extension']);
             }
             $product->update($validated);
             $request->user()->logs()->create([
