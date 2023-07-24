@@ -68,7 +68,7 @@ class TransactionController extends Controller
             $transaction->void = !$transaction->void;
             $transaction->save();
             $transaction->total();
-            return response()->json(['ok' => true, 'message' => 'Transaction has been voided!', 'data' => $transaction], 200);
+            return response()->json(['ok' => true, 'message' => $transaction->void ? 'Transaction has been voided!' : 'Transaction has been unvoided!', 'data' => $transaction], 200);
         }
         else{
             return response()->json(['ok' => false, 'message' => "Not Found!"], 404);
