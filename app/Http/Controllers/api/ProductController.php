@@ -17,7 +17,11 @@ class ProductController extends Controller
     // MIDDLEWARE: auth:api
     // ROUTE: GET: api/products
     public function index(Request $request){
-        return response()->json(['ok' => true, 'data' => Product::where('user_id', $request->user()->id)->get()], 200);
+        $products = Product::where('user_id', $request->user()->id)->get();
+        $products->map(function ($product){
+            $product->stock();
+        });
+        return response()->json(['ok' => true, 'data' => $products], 200);
     }
 
     // MIDDLEWARE: auth:api

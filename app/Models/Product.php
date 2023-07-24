@@ -20,6 +20,9 @@ class Product extends Model
     }
 
     public function stock(){
-
+        $result = DB::table('products')->join("product_transaction", "products.id" , "=", "product_transaction.product_id")->join("transactions", 'transactions.id', '=', 'product_transaction.transaction_id')
+        ->selectRaw("SUM(product_transaction.quantity) as 'stock', SUM(product_transaction.quantity * products.price) as 'total_price'")->where('transactions.void', false)->where('products.id', $this->id)->groupBy('products.id')->first();
+        $this->stock = $result->stock;
+        $this->total_price = $result->total_price;
     }
 }
