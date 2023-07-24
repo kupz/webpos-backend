@@ -13,7 +13,8 @@ use App\Models\Product;
 
 class TransactionController extends Controller
 {
-    //
+    // MIDDLEWARE - auth:api
+    // ROUTE - GET: api/transactions
     public function index(Request $request){
         $transactions = $request->user()->transactions;
         $transactions->map(function ($transaction)  {
@@ -23,6 +24,8 @@ class TransactionController extends Controller
         return response()->json(['ok' => true, 'data' => $transactions], 200);
     }
 
+    // MIDDLEWARE - auth:api
+    // ROUTE - POST: api/transactions
     public function store(Request $request){
         $validator = Validator::make($request->all(), [
             'cart' => 'array|required|min:1',
@@ -56,5 +59,19 @@ class TransactionController extends Controller
 
 
 
+    }
+
+    // MIDDLEWARE - auth:api
+    // ROUTE - DELETE: api/transactions/{transaction}
+    public function void (Request $request, Transaction $transaction){
+        if($transaction->user->id === $request->user()->id){
+            $transaction->void = !$transaction->void;
+            $transaction->save();
+            $transaction->total();
+            return response()->json(['ok' => true, 'message' => 'Transaction has been voided!', 'data' => $transaction], 200);
+        }
+        else{
+            return response()->json(['ok' => false, 'message' => "Not Found!"], 404);
+        }
     }
 }
