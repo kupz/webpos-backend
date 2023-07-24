@@ -32,18 +32,18 @@ class ProductController extends Controller
             'description' => 'required|max:200|string',
             'barcode' => 'nullable|max:200|string|unique:products',
             'price' => 'required|max:200|string',
-            'image' => 'nullable|image|max:8192'
+            'image' => 'sometimes|image|max:8192'
         ]);
         if($validator->fails()){
             return response()->json(['ok' => false, 'message' => "Request didn't pass the validation.", 'errors' => $validator->errors()], 400);
         }
         else{
             $validated = $validator->safe()->except(['image']);
-            if($request->file('image')){
+            if(!empty($request->file('image'))){
                 $validated['extension'] = $request->file('image')->getClientOriginalExtension();
             }
             $product = $request->user()->products()->create($validated);
-            if($request->file('image')){
+            if(!empty($request->file('image'))){
                 $request->file('image')->storeAs('public/uploads', $product->id . "." . $validated['extension']);
             }
             $request->user()->logs()->create([
@@ -61,42 +61,47 @@ class ProductController extends Controller
     // MIDDLEWARE: auth:api
     // ROUTE: PATCH: api/products/{id}
     public function update(Request $request, Product $product){
-        $validator = Validator::make($request->all(), [
-            'sku' => [
-                "required", "max:200", "string",
-                Rule::unique('products')->where(fn (Builder $query) => $query->where('user_id', $request->user()->id))->ignore($product->id)
-            ],
-            'name' => 'required|max:200|string',
-            'description' => 'required|max:200|string',
-            'barcode' => 'required|max:200|string',
-            'price' => 'required|max:200|string',
-            'image' => 'nullable|image|max:8192'
-        ]);
-        if($validator->fails()){
-            return response()->json(['ok' => false, 'message' => "Request didn't pass the validation.", 'errors' => $validator->errors()], 400);
+        if($product->user_id === $request->user()->id){
+            $validator = Validator::make($request->all(), [
+                'sku' => [
+                    "required", "max:200", "string",
+                    Rule::unique('products')->where(fn (Builder $query) => $query->where('user_id', $request->user()->id))->ignore($product->id)
+                ],
+                'name' => 'required|max:200|string',
+                'description' => 'required|max:200|string',
+                'barcode' => 'required|max:200|string|unique:products,barcode,' . $product->id,
+                'price' => 'required|max:200|string',
+                'image' => 'sometimes|image|max:8192'
+            ]);
+            if($validator->fails()){
+                return response()->json(['ok' => false, 'message' => "Request didn't pass the validation.", 'errors' => $validator->errors()], 400);
+            }
+            else{
+                $validated = $validator->safe()->except(['image']);
+                $changes = [];
+                if($request->file('image')){
+                    $validated['extension'] = $request->file('image')->getClientOriginalExtension();
+                    $request->file('image')->storeAs('public/uploads', $product->id . "." . $validated['extension']);
+                }
+                foreach($validated as $key => $value){
+                    if($value != $product[$key]){
+                        $changes[$key] = ["old" => $product[$key], "new" => $value];
+                    }
+                }
+                $product->update($validated);
+                $request->user()->logs()->create([
+                    'table_name' => 'products',
+                    'object_id' => $product->id,
+                    'label' => 'product-update',
+                    'description' => "Product ($product->id) has been updated!",
+                    'properties' => json_encode(array_merge(["changes" => $changes], ['user-agent' => $request->userAgent(), 'token' => $request->user()->token()->id])),
+                    'ip' => $request->ip()
+                ]);
+                return response()->json(['ok' => true, 'message' => 'Product has been updated!', 'data' => $product], 200);
+            }
         }
         else{
-            $validated = $validator->safe()->except(['image']);
-            $changes = [];
-            foreach($validated as $key => $value){
-                if($value != $product[$key]){
-                    $changes[$key] = ["old" => $product[$key], "new" => $value];
-                }
-            }
-            if($request->file('image')){
-                $validated['extension'] = $request->file('image')->getClientOriginalExtension();
-                $request->file('image')->storeAs('public/uploads', $product->id . "." . $validated['extension']);
-            }
-            $product->update($validated);
-            $request->user()->logs()->create([
-                'table_name' => 'products',
-                'object_id' => $product->id,
-                'label' => 'product-update',
-                'description' => "Product ($product->id) has been updated!",
-                'properties' => json_encode(array_merge(["changes" => $changes], ['user-agent' => $request->userAgent(), 'token' => $request->user()->token()->id])),
-                'ip' => $request->ip()
-            ]);
-            return response()->json(['ok' => true, 'message' => 'Product has been updated!', 'data' => $product], 200);
+            return response()->json(['ok' => false, 'message' => 'Unauthenticated!'], 401);
         }
     }
 

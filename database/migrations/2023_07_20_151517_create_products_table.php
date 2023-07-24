@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string("barcode");
             $table->decimal('price', 12 ,2);
             $table->unsignedBigInteger("user_id");
-            $table->string("extension");
+            $table->string("extension")->nullable();
             $table->timestamps();
 
             $table->foreign("user_id")->references("id")->on("users");

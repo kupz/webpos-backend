@@ -25,6 +25,12 @@ Route::prefix('products')->middleware(['auth:api'])->group(function () {
     Route::patch('/{product}', [App\Http\Controllers\api\ProductController::class, 'update']);
 });
 
+Route::prefix('transactions')->middleware(['auth:api'])->group(function () {
+    Route::get('/', [App\Http\Controllers\api\TransactionController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\api\TransactionController::class, 'store']);
+    // Route::patch('/{product}', [App\Http\Controllers\api\ProductController::class, 'update']);
+});
+
 Route::middleware(['guest:api'])->group(function () {
     Route::post('register', [App\Http\Controllers\api\AuthController::class, 'register']);
     Route::post('login', [App\Http\Controllers\api\AuthController::class, 'login']);
