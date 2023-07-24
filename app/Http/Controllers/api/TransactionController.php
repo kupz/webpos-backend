@@ -51,7 +51,7 @@ class TransactionController extends Controller
             }
             $transaction->products;
             $transaction->total();
-            return response()->json(['ok' => true, 'data' => $transaction], 200);
+            return response()->json(['ok' => true, 'data' => $transaction, 'message' => "Transaction has been created!"], 200);
         }
 
 
