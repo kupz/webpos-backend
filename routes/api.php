@@ -23,6 +23,7 @@ Route::prefix('products')->middleware(['auth:api'])->group(function () {
     Route::get('/', [App\Http\Controllers\api\ProductController::class, 'index']);
     Route::post('/', [App\Http\Controllers\api\ProductController::class, 'store']);
     Route::patch('/{product}', [App\Http\Controllers\api\ProductController::class, 'update']);
+    Route::get('/top5', [App\Http\Controllers\api\ProductController::class, 'top5']);
 });
 
 Route::prefix('transactions')->middleware(['auth:api'])->group(function () {

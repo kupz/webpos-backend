@@ -9,6 +9,7 @@ use App\Models\Product;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -107,6 +108,21 @@ class ProductController extends Controller
         else{
             return response()->json(['ok' => false, 'message' => 'Unauthenticated!'], 401);
         }
+    }
+
+    public function top5(Request $request){
+        $top5 = DB::table('products')
+            ->join('product_transaction', 'products.id' , '=', 'product_transaction.product_id')
+            ->join('transactions', 'transactions.id', '=', 'product_transaction.transaction_id')
+            ->selectRaw("ABS(SUM(product_transaction.quantity * product_transaction.price)) as 'total_outbound_price', products.*")
+            ->where('transactions.type', 1)
+            ->where('transactions.void', false)
+            ->where('transactions.user_id', $request->user()->id)
+            ->groupBy('products.id')
+            ->orderBy('total_outbound_price', 'DESC')
+            ->limit(5)
+            ->get();
+        return response()->json(['data' => $top5, 'ok' => true]);
     }
 
 }
