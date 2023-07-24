@@ -26,5 +26,9 @@ class Product extends Model
             $this->stock = $result->stock;
             $this->total_price = $result->total_price;
         }
+        else{
+            $this->stock = 0;
+            $this->total_price = 0;
+        }
     }
 }
