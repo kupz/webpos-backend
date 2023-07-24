@@ -23,8 +23,8 @@ class Transaction extends Model
         $this->total_quantity = 0;
         $this->total_price = 0;
         $this->products->map(function($product){
-            $this->total_quantity += $product->pivot->quantity;
-            $this->total_price += $product->pivot->price * $product->pivot->quantity;
+            $this->total_quantity += abs($product->pivot->quantity);
+            $this->total_price += abs($product->pivot->price * $product->pivot->quantity);
         });
     }
 }
