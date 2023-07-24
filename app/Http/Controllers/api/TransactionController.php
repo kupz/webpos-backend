@@ -18,6 +18,7 @@ class TransactionController extends Controller
         $transactions = $request->user()->transactions;
         $transactions->map(function ($transaction)  {
             $transaction->products;
+            $transaction->total();
         });
         return response()->json(['ok' => true, 'data' => $transactions], 200);
     }

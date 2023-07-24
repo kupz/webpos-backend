@@ -71,7 +71,7 @@ class ProductController extends Controller
                 'description' => 'required|max:200|string',
                 'barcode' => 'required|max:200|string|unique:products,barcode,' . $product->id,
                 'price' => 'required|max:200|string',
-                'image' => 'sometimes|image|max:8192'
+                'image' => 'nullable|image|max:8192'
             ]);
             if($validator->fails()){
                 return response()->json(['ok' => false, 'message' => "Request didn't pass the validation.", 'errors' => $validator->errors()], 400);
