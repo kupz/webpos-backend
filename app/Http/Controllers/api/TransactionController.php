@@ -50,7 +50,7 @@ class TransactionController extends Controller
             $transaction = Transaction::create(['user_id' => $request->user()->id, 'type' => $validated['type']]);
             foreach ($validated['cart'] as $item){
                 $product = Product::where('id', $item['product'])->where('user_id', $request->user()->id)->first();
-                $transaction->products()->attach($product->id, ['price' => $product->price, 'quantity' => $validated['type'] == 1 ? $item['quantity'] * -1 : $item['quantity']]);
+                $transaction->products()->attach($product->id, ['price' => $product->price, 'quantity' => $validated['type'] == 1 || $validated['type'] == 3 ? $item['quantity'] * -1 : $item['quantity']]);
             }
             $transaction->products;
             $transaction->total();
