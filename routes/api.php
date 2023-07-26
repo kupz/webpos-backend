@@ -23,7 +23,7 @@ Route::prefix('products')->middleware(['auth:api'])->group(function () {
     Route::get('/', [App\Http\Controllers\api\ProductController::class, 'index']);
     Route::post('/', [App\Http\Controllers\api\ProductController::class, 'store']);
     Route::patch('/{product}', [App\Http\Controllers\api\ProductController::class, 'update']);
-    Route::get('/reports/sales/price', [App\Http\Controllers\api\ProductController::class, 'top5Sales']);
+    Route::get('/reports/sales/price', [App\Http\Controllers\api\ProductController::class, 'top5Price']);
     Route::get('/reports/sales/quantity', [App\Http\Controllers\api\ProductController::class, 'top5Quantity']);
 });
 
