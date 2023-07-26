@@ -110,7 +110,7 @@ class ProductController extends Controller
         }
     }
 
-    public function top5(Request $request){
+    public function top5Sales(Request $request){
         $top5 = DB::table('products')
             ->join('product_transaction', 'products.id' , '=', 'product_transaction.product_id')
             ->join('transactions', 'transactions.id', '=', 'product_transaction.transaction_id')
@@ -120,6 +120,22 @@ class ProductController extends Controller
             ->where('transactions.user_id', $request->user()->id)
             ->groupBy('products.id')
             ->orderBy('total_outbound_price', 'DESC')
+            ->limit(5)
+            ->get();
+        return response()->json(['data' => $top5, 'ok' => true]);
+    }
+
+    
+
+    public function top5Stocks(Request $request){
+        $top5 = DB::table('products')
+            ->join('product_transaction', 'products.id' , '=', 'product_transaction.product_id')
+            ->join('transactions', 'transactions.id', '=', 'product_transaction.transaction_id')
+            ->selectRaw("ABS(SUM(product_transaction.quantity)) as 'total_stock', products.*")
+            ->where('transactions.void', false)
+            ->where('transactions.user_id', $request->user()->id)
+            ->groupBy('products.id')
+            ->orderBy('total_stock', 'DESC')
             ->limit(5)
             ->get();
         return response()->json(['data' => $top5, 'ok' => true]);

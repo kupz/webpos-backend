@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string("sku");
             $table->string("name");
             $table->string("description");
-            $table->string("barcode");
+            $table->string("barcode")->nullable();
             $table->decimal('price', 12 ,2);
             $table->unsignedBigInteger("user_id");
             $table->string("extension")->nullable();
