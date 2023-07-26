@@ -135,7 +135,7 @@ class ProductController extends Controller
             ->where('transactions.void', false)
             ->where('transactions.user_id', $request->user()->id)
             ->groupBy('products.id')
-            ->orderBy('total_stock', 'DESC')
+            ->orderBy('total_outbound_quantity', 'DESC')
             ->limit(5)
             ->get();
         return response()->json(['data' => $top5, 'ok' => true]);
