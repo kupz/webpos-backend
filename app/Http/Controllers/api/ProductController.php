@@ -156,4 +156,21 @@ class ProductController extends Controller
 
     }
 
+
+    
+    public function dailyQuantity(Request $request){
+        $quantity = DB::table('products')
+            ->join('product_transaction', 'products.id', '=', 'product_transaction.product_id')
+            ->join('transactions', 'transactions.id', '=', 'product_transaction.transaction_id')
+            ->selectRaw("SUM(ABS(product_transaction.quantity)) as total_quantity, DATE_FORMAT(transactions.created_at, '%Y-%m-%d') transaction_date")
+            ->whereRaw("transactions.created_at BETWEEN DATE_SUB(NOW(), INTERVAL 15 DAY) AND NOW()")
+            ->where('transactions.void', false)
+            ->where('transactions.user_id', $request->user()->id)
+            ->groupBy('transaction_date')
+            ->orderBy('transaction_date', 'ASC')
+            ->get();
+        return response()->json(['data' => $quantity, 'ok' => true]);
+
+    }
+
 }
