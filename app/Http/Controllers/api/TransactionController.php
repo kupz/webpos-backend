@@ -16,7 +16,7 @@ class TransactionController extends Controller
     // MIDDLEWARE - auth:api
     // ROUTE - GET: api/transactions
     public function index(Request $request){
-        $transactions = $request->user()->transactions->reverse();
+        $transactions = $request->user()->transactions->reverse()->values();
         $transactions->map(function ($transaction)  {
             $transaction->products;
             $transaction->total();
