@@ -30,12 +30,12 @@ class ProductController extends Controller
     public function store(Request $request){
         $validator = Validator::make($request->all(), [
             'sku' => [
-                'required', 'max:200', 'string',
+                'sometimes', 'max:200', 'string',
                 Rule::unique('products')->where(fn (Builder $query) => $query->where('user_id', $request->user()->id))
             ],
             'name' => 'required|max:200|string',
             'description' => 'required|max:200|string',
-            'barcode' => 'nullable|max:200|string|unique:products',
+            'barcode' => 'sometimes|max:200|string|unique:products',
             'price' => 'required|max:200|string',
             'image' => 'sometimes|image|max:8192'
         ]);
@@ -69,12 +69,12 @@ class ProductController extends Controller
         if($product->user_id === $request->user()->id){
             $validator = Validator::make($request->all(), [
                 'sku' => [
-                    "required", "max:200", "string",
+                    "sometimes", "max:200", "string",
                     Rule::unique('products')->where(fn (Builder $query) => $query->where('user_id', $request->user()->id))->ignore($product->id)
                 ],
                 'name' => 'required|max:200|string',
                 'description' => 'required|max:200|string',
-                'barcode' => 'required|max:200|string|unique:products,barcode,' . $product->id,
+                'barcode' => 'sometimes|max:200|string|unique:products,barcode,' . $product->id,
                 'price' => 'required|max:200|string',
                 'image' => 'nullable|image|max:8192'
             ]);
@@ -120,7 +120,7 @@ class ProductController extends Controller
             ->where('transactions.user_id', $request->user()->id)
             ->groupBy('products.id')
             ->orderBy('total_outbound_price', 'DESC')
-            ->limit(5)
+            ->limit(10)
             ->get();
         return response()->json(['data' => $top5, 'ok' => true]);
     }
@@ -136,9 +136,24 @@ class ProductController extends Controller
             ->where('transactions.user_id', $request->user()->id)
             ->groupBy('products.id')
             ->orderBy('total_outbound_quantity', 'DESC')
-            ->limit(5)
+            ->limit(10)
             ->get();
         return response()->json(['data' => $top5, 'ok' => true]);
+    }
+
+    public function dailySales(Request $request){
+        $sales = DB::table('products')
+            ->join('product_transaction', 'products.id', '=', 'product_transaction.product_id')
+            ->join('transactions', 'transactions.id', '=', 'product_transaction.transaction_id')
+            ->selectRaw("SUM(ABS(product_transaction.quantity) * product_transaction.price) as total_sales, DATE_FORMAT(transactions.created_at, '%Y-%m-%d') transaction_date")
+            ->whereRaw("transactions.created_at BETWEEN DATE_SUB(NOW(), INTERVAL 15 DAY) AND NOW()")
+            ->where('transactions.void', false)
+            ->where('transactions.user_id', $request->user()->id)
+            ->groupBy('transaction_date')
+            ->orderBy('transaction_date', 'ASC')
+            ->get();
+        return response()->json(['data' => $sales, 'ok' => true]);
+
     }
 
 }

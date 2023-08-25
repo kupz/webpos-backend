@@ -25,6 +25,7 @@ Route::prefix('products')->middleware(['auth:api'])->group(function () {
     Route::patch('/{product}', [App\Http\Controllers\api\ProductController::class, 'update']);
     Route::get('/reports/sales/price', [App\Http\Controllers\api\ProductController::class, 'top5Price']);
     Route::get('/reports/sales/quantity', [App\Http\Controllers\api\ProductController::class, 'top5Quantity']);
+    Route::get('/reports/sales/dailysales', [App\Http\Controllers\api\ProductController::class, 'dailySales']);
 });
 
 Route::prefix('transactions')->middleware(['auth:api'])->group(function () {

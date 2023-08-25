@@ -16,7 +16,7 @@ class TransactionController extends Controller
     // MIDDLEWARE - auth:api
     // ROUTE - GET: api/transactions
     public function index(Request $request){
-        $transactions = $request->user()->transactions;
+        $transactions = $request->user()->transactions->reverse();
         $transactions->map(function ($transaction)  {
             $transaction->products;
             $transaction->total();
@@ -52,6 +52,14 @@ class TransactionController extends Controller
                 $product = Product::where('id', $item['product'])->where('user_id', $request->user()->id)->first();
                 $transaction->products()->attach($product->id, ['price' => $product->price, 'quantity' => $validated['type'] == 1 || $validated['type'] == 3 ? $item['quantity'] * -1 : $item['quantity']]);
             }
+            $request->user()->logs()->create([
+                'table_name' => 'transactions',
+                'object_id' => $transaction->id,
+                'label' => 'transaction-store',
+                'description' => "Transaction ($transaction->id) has been created!",
+                'properties' => json_encode(array_merge($validated, ['user-agent' => $request->userAgent(), 'token' => $request->user()->token()->id])),
+                'ip' => $request->ip()
+            ]);
             $transaction->products;
             $transaction->total();
             return response()->json(['ok' => true, 'data' => $transaction, 'message' => "Transaction has been created!"], 200);
@@ -67,6 +75,14 @@ class TransactionController extends Controller
         if($transaction->user->id === $request->user()->id){
             $transaction->void = !$transaction->void;
             $transaction->save();
+            $request->user()->logs()->create([
+                'table_name' => 'transactions',
+                'object_id' => $transaction->id,
+                'label' => 'transaction-store',
+                'description' => $transaction->void ? "Transaction ($transaction->id) has been voided!" : "Transaction ($transaction->id) has been unvoided!",
+                'properties' => json_encode(['user-agent' => $request->userAgent(), 'token' => $request->user()->token()->id]),
+                'ip' => $request->ip()
+            ]);
             $transaction->total();
             return response()->json(['ok' => true, 'message' => $transaction->void ? 'Transaction has been voided!' : 'Transaction has been unvoided!', 'data' => $transaction], 200);
         }
